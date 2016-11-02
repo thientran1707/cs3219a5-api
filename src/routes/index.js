@@ -1,13 +1,12 @@
 import { Router } from 'express';
+import GithubController from '../controllers/GithubController';
 
 export default () => {
-  let router = Router();
+  const router = Router();
+  const Github = new GithubController();
 
-  router.get('/test', (req, res) => {
-    res.status(200).json({
-      message: 'Success'
-    });
-  });
+  router.get('/contributors', Github.retrieveContributor);
+  router.get('/member/commits', Github.retrieveMemberCommitHistory);
 
   return router;
 }
