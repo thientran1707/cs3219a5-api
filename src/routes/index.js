@@ -8,5 +8,12 @@ export default () => {
   router.get('/contributors', Github.retrieveContributor);
   router.get('/member/commits', Github.retrieveMemberCommitHistory);
 
+  // used to test server
+  router.get('/test', (req, res) => {
+    res.status(200).json({
+      status: 'Test succesfully'
+    });
+  });
+
   return router;
 }

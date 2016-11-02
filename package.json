@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/thientran1707/cs3219a5-api#readme",
   "dependencies": {
+    "async": "^2.1.2",
     "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",

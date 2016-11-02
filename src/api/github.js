@@ -1,6 +1,7 @@
 import request from 'request-promise';
 import moment from 'moment';
 import Promise from 'bluebird';
+import async from 'async';
 import config from '../config';
 import { fetchContributors, fetchBranches, fetchCommitsForBranchAndAuthor } from './util';
 const API_URL = 'https://api.github.com/repos/';
@@ -136,24 +137,32 @@ function fetchCommitsFromBranch(owner, repo, branch, author, start, end) {
         promiseArray.push(promise);
       }
 
-      return Promise.all(promiseArray);
+      return promiseArray;
     })
-    .then((results) => {
-      // merge them
-      let commits = [];
-      let hash = {}; // hash to avoid duplicate
+    .then((promiseArray) => {
+      // slowdown the requests
+      async.series(promiseArray, (error, results) => {
+        if (error) {
+          console.log('Error: ', error.message);
+          return [];
+        }
 
-      for (let result of results) {
-        for (let commit of result) {
-          const { commit_url } = commit;
-          if (!hash[commit_url]) {
-            hash[commit_url] = true;
-            commits.push(commit);
+        // merge them
+        let commits = [];
+        let hash = {}; // hash to avoid duplicate
+
+        for (let result of results) {
+          for (let commit of result) {
+            const { commit_url } = commit;
+            if (!hash[commit_url]) {
+              hash[commit_url] = true;
+              commits.push(commit);
+            }
           }
         }
-      }
 
-      return commits;
+        return commits;
+      });
     });*/
 
   return fetchCommitsForBranchAndAuthor(owner, repo, branch, author, start, end, 1)
