@@ -18,22 +18,44 @@ export function fetchContributors(owner, repo) {
   return request(options);
 }
 
-export function fetchCommits(owner, repo, author, start, end, page) {
+export function fetchCommits(owner, repo, author, start, end, path, page) {
+  var nullable = {};
+  if (author) Object.assign(nullable, { author: author });
+  if (start) Object.assign(nullable, { since: start });
+  if (end) Object.assign(nullable, { until: end });
+  if (page) Object.assign(nullable, { page: page });
+  if (path) Object.assign(nullable, { path: path });
+  const qs = Object.assign(nullable, {
+    per_page: 100,
+    branch: 'master',
+    client_id: config.github_client_id,
+    client_secret: config.github_client_secret
+  });
   const options = {
     uri: API_URL + `${owner}/${repo}/commits`,
     headers: {
       'User-Agent': 'Request-Promise'
     },
-    qs: {
-      author: author,
-      since: start,
-      until: end,
-      per_page: 100,
-      page: page,
-      branch: 'master',
-      client_id: config.github_client_id,
-      client_secret: config.github_client_secret
+    qs: qs,
+    json: true
+  };
+
+  return request(options);
+}
+
+export function fetchCommitBySha(owner, repo, sha) {
+  const qs = {
+    per_page: 100,
+    branch: 'master',
+    client_id: config.github_client_id,
+    client_secret: config.github_client_secret
+  };
+  const options = {
+    uri: API_URL + `${owner}/${repo}/commits/${sha}`,
+    headers: {
+      'User-Agent': 'Request-Promise'
     },
+    qs: qs,
     json: true
   };
 

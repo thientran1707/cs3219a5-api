@@ -7,6 +7,7 @@ export default () => {
 
   router.get('/contributors', Github.retrieveContributor);
   router.get('/member/commits', Github.retrieveMemberCommitHistory);
+  router.get('/file', Github.retrieveFileChangeHistory);
 
   // used to test server
   router.get('/test', (req, res) => {
