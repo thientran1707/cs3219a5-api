@@ -3,7 +3,6 @@
 import { fetchTeamContribution, fetchMemberCommitHistory } from '../api/github';
 
 class GithubController {
-
   retrieveContributor(req, res) {
     const { owner, repo } = req.query;
     if (!owner || !repo) {
@@ -14,43 +13,34 @@ class GithubController {
       return;
     }
 
-    fetchTeamContribution(owner, repo)
-      .then((results) => {
-        res.status(200).json({
-          results: results
-        });
-      })
-      .catch((err) => {
-        res.status(500).json({
-          error: err.message
-        });
-      });
+    reply(res, fetchTeamContribution(owner, repo))
   }
 
   retrieveMemberCommitHistory(req, res) {
     const { owner, repo, author, start, end } = req.query;
 
-    if (!owner ||!repo || !author || !start || !end) {
+    if (!owner || !repo || !author) {
       res.status(400).json({
-        error: 'Owner, repo, author, start and end time required'      
+        error: 'Owner, repo, author required'      
       });
 
       return;
     }
 
-    fetchMemberCommitHistory(owner, repo, author, start, end)
-      .then((commits) => {
-        res.status(200).json({
-          results: commits
-        });
-      })
-      .catch((err) => {
-        res.status(500).json({
-          error: err.message
-        });
-      });
+    reply(res, fetchMemberCommitHistory(owner, repo, author, start, end))
   }
+}
 
+function reply(res, apiCall) {
+  apiCall
+    .then((results) => {
+      res.status(200).json(results);
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err.message
+      });
+    });
 }
 
 export default GithubController;

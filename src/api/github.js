@@ -3,8 +3,9 @@ import moment from 'moment';
 import Promise from 'bluebird';
 import async from 'async';
 import config from '../config';
-import { fetchContributors, fetchBranches, fetchCommitsForBranchAndAuthor } from './util';
+import { fetchContributors, fetchBranches, fetchCommits } from './util';
 const API_URL = 'https://api.github.com/repos/';
+const ALL_COMMITS_QUERY_RATE = 10;
 
 export function fetchTeamContribution(owner, repo) {
   return fetchContributors(owner, repo)
@@ -25,54 +26,16 @@ export function fetchTeamContribution(owner, repo) {
 }
 
 export function fetchMemberCommitHistory(owner, repo, author, start, end) {
-  const options = {
-    uri: API_URL + `${owner}\${repo}\commits?client_id=${config.github_client_id}&client_secret=${config.github_client_secret}`,
-    headers: {
-      'User-Agent': 'Request-Promise'
-    },
-    json: true
-  };
-
-  return fetchAllBranches(owner, repo, author, start, end)
-    .then((branches) => {
-      const promiseArray = branches.map((branch) => {
-        return fetchCommitsFromBranch(owner, repo, branch, author, start, end);
-      });
-
-      return Promise.all(promiseArray);
-    })
-    .then((results) => {
-      // merge them
-      let commits = [];
-      let hash = {}; // hash to avoid duplicate
-
-      for (let result of results) {
-        for (let commit of result) {
-          const { commit_url } = commit;
-          if (!hash[commit_url]) {
-            hash[commit_url] = true;
-            commits.push(commit);
-          }
-        }
-      }
-
-      // sort by date
-      return commits.sort((first, second) => {
-        return moment(second.commit_date) - moment(first.commit_date);
-      });
-    });
+  return fetchCommitsMultiple(owner, repo, author, start, end, 1);
 }
 
 export function compareEfforts() {
-
 }
 
 export function fetchCommitHistoryWithCodeChunk() {
-
 }
 
 export function fetchTeamLinesOfCode() {
-
 }
 
 /**
@@ -85,94 +48,35 @@ function processWeekData(weeks) {
     addition += a;
     deletion += d;
   }
-
   return { addition, deletion };
 }
 
-function fetchAllBranches(owner, repo) {
-  return fetchBranches(owner, repo)
-    .then((branches) => {
-      return branches.map((branch) => {
-        const { name } = branch;
-        return name;
-      });
-    });
-}
-
-// get the number of commits of user, if not found, return -1
-function findCommitCountForAuthor(owner, repo, author) {
-  return fetchContributors(owner, repo)
-    .then((contributors) => {
-      let count = 100;
-      for (let contributor of contributors) {
-        if (contributor.author && contributor.author.login == author) {
-          count = contributor.total;
-          break;
-        }
-      }
-
-      return count;
-    });
-}
-
-function fetchCommitsFromBranch(owner, repo, branch, author, start, end) {
-  /*findCommitCountForAuthor(owner, repo, author)
-    .then((count) => {
-      //console.log('Count is: ', count);
-      const promiseArray = [];
-      console.log('Start fetching...');
-      for (let i = 1; i <= Math.ceil(count / 100); i++) {
-        const promise = fetchCommitsForBranchAndAuthor(owner, repo, branch, author, start, end, i)
-          .then((commitObjs) => {
-            return commitObjs.map((commitObj) => {
-              const { commit, author } = commitObj;
-              const { message: commit_message, url: commit_url } = commit;
-              const { login: author_name, avatar_url: author_avatar_url } = author;
-              const commit_date = commit.author.date;
-
-              return { commit_message, commit_url, author_name, author_avatar_url, commit_date };
-            });
+function fetchCommitsMultiple(owner, repo, author, start, end, page) {
+  const promiseList = Array(ALL_COMMITS_QUERY_RATE).fill().map((_, step) => {
+    return fetchCommitsPaginated(owner, repo, author, start, end, page + step);
+  });
+  return Promise.all(promiseList)
+    .then((pages) => {
+      const aggregate = [].concat.apply([], pages);
+      if (pages[ALL_COMMITS_QUERY_RATE - 1].length == 0) {
+        return aggregate;
+      } else {
+        return fetchCommitsMultiple(owner, repo, author, start, end, page + ALL_COMMITS_QUERY_RATE)
+          .then((nextBatch) => {
+            return aggregate.concat(nextBatch);
           });
-
-        promiseArray.push(promise);
       }
+    });
+}
 
-      return promiseArray;
-    })
-    .then((promiseArray) => {
-      // slowdown the requests
-      async.series(promiseArray, (error, results) => {
-        if (error) {
-          console.log('Error: ', error.message);
-          return [];
-        }
-
-        // merge them
-        let commits = [];
-        let hash = {}; // hash to avoid duplicate
-
-        for (let result of results) {
-          for (let commit of result) {
-            const { commit_url } = commit;
-            if (!hash[commit_url]) {
-              hash[commit_url] = true;
-              commits.push(commit);
-            }
-          }
-        }
-
-        return commits;
-      });
-    });*/
-
-  return fetchCommitsForBranchAndAuthor(owner, repo, branch, author, start, end, 1)
-    .then((commitObjs) => {
-      return commitObjs.map((commitObj) => {
+function fetchCommitsPaginated(owner, repo, author, start, end, page) {
+  return fetchCommits(owner, repo, author, start, end, page)
+    .then((response) => {
+      return response.map((commitObj) => {
         const { commit, author } = commitObj;
         const { message: commit_message, url: commit_url } = commit;
         const { login: author_name, avatar_url: author_avatar_url } = author;
         const commit_date = commit.author.date;
-
         return {
           commit_message,
           commit_url,
