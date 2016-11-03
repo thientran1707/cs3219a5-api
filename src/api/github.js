@@ -1,7 +1,6 @@
 import request from 'request-promise';
 import moment from 'moment';
 import Promise from 'bluebird';
-import async from 'async';
 import config from '../config';
 import { fetchContributors, fetchCommits, fetchCommitBySha } from './util';
 const API_URL = 'https://api.github.com/repos/';
