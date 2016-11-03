@@ -1,6 +1,6 @@
 'use strict';
 
-import { fetchTeamContribution, fetchMemberCommitHistory } from '../api/github';
+import { fetchTeamContribution, fetchMemberCommitHistory, fetchFileChangeHistory } from '../api/github';
 
 class GithubController {
   retrieveContributor(req, res) {
@@ -28,6 +28,20 @@ class GithubController {
     }
 
     reply(res, fetchMemberCommitHistory(owner, repo, author, start, end, page));
+  }
+
+  retrieveFileChangeHistory(req, res) {
+    const { owner, repo, start, end, path } = req.query;
+
+    if (!owner || !repo) {
+      res.status(400).json({
+        error: 'Owner, repo, author required'      
+      });
+
+      return;
+    }
+
+    reply(res, fetchFileChangeHistory(owner, repo, start, end, path));
   }
 }
 
