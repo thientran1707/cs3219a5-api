@@ -13,11 +13,11 @@ class GithubController {
       return;
     }
 
-    reply(res, fetchTeamContribution(owner, repo))
+    reply(res, fetchTeamContribution(owner, repo));
   }
 
   retrieveMemberCommitHistory(req, res) {
-    const { owner, repo, author, start, end } = req.query;
+    const { owner, repo, author, start, end, page } = req.query;
 
     if (!owner || !repo || !author) {
       res.status(400).json({
@@ -27,7 +27,7 @@ class GithubController {
       return;
     }
 
-    reply(res, fetchMemberCommitHistory(owner, repo, author, start, end))
+    reply(res, fetchMemberCommitHistory(owner, repo, author, start, end, page));
   }
 }
 

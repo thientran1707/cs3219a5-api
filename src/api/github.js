@@ -25,8 +25,12 @@ export function fetchTeamContribution(owner, repo) {
     });
 }
 
-export function fetchMemberCommitHistory(owner, repo, author, start, end) {
-  return fetchCommitsMultiple(owner, repo, author, start, end, 1);
+export function fetchMemberCommitHistory(owner, repo, author, start, end, page) {
+  if (page) {
+    return fetchCommitsSingle(owner, repo, author, start, end, page); 
+  } else {
+    return fetchCommitsMultiple(owner, repo, author, start, end, 1); 
+  }
 }
 
 export function compareEfforts() {
@@ -53,7 +57,7 @@ function processWeekData(weeks) {
 
 function fetchCommitsMultiple(owner, repo, author, start, end, page) {
   const promiseList = Array(ALL_COMMITS_QUERY_RATE).fill().map((_, step) => {
-    return fetchCommitsPaginated(owner, repo, author, start, end, page + step);
+    return fetchCommitsSingle(owner, repo, author, start, end, page + step);
   });
   return Promise.all(promiseList)
     .then((pages) => {
@@ -69,7 +73,7 @@ function fetchCommitsMultiple(owner, repo, author, start, end, page) {
     });
 }
 
-function fetchCommitsPaginated(owner, repo, author, start, end, page) {
+function fetchCommitsSingle(owner, repo, author, start, end, page) {
   return fetchCommits(owner, repo, author, start, end, page)
     .then((response) => {
       return response.map((commitObj) => {
