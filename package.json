@@ -28,10 +28,7 @@
     "body-parser": "^1.15.2",
     "cors": "^2.8.1",
     "express": "^4.14.0",
-    "moment": "^2.15.2",
     "mongoose": "^4.6.6",
-    "nodegit": "^0.16.0",
-    "nodemailer": "^2.6.4",
     "request": "^2.76.0",
     "request-promise": "^4.1.1"
   },
