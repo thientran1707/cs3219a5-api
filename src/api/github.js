@@ -31,22 +31,24 @@ export function fetchMemberCommitHistory(owner, repo, author, start, end, page) 
   }
 }
 
-export function fetchFileChangeHistory(owner, repo, start, end, path) {
-  return fetchCommitsMultiple(owner, repo, null, start, end, path, 1)
+export function fetchFileChangeHistory(owner, repo, from, to, path) {
+  return fetchCommitsMultiple(owner, repo, null, null, null, path, 1)
     .then(response => {
-      const promiseList = response.map((entry) => {
-        return fetchCommitBySha(owner, repo, entry.sha);
-      });
-      return Promise.all(promiseList);
+      return Promise.all(response.map((entry) => {
+        return fetchCommitBySha(owner, repo, entry.sha)
+          .then((commit) => {
+            const patch = commit.files.find((file) => file.filename == path).patch;
+            const changes = involveLines(patch, from, to);
+            if (changes) {
+              return [Object.assign(entry, { changes: changes })];
+            } else {
+              return [];
+            }
+          });
+      }));
     })
-    .then(commitList => {
-      return commitList.map(commit => commit.files);
-    })
-    .then(fileArrays => {
-      return [].concat.apply([], fileArrays).filter((file) => file.filename == path).map((file) => {
-        const { sha, patch } = file;
-        return { sha, patch };
-      });
+    .then(result => {
+      return [].concat.apply([], result);
     });
 }
 
@@ -92,6 +94,69 @@ function processWeekData(weeks) {
   return { addition, deletion };
 }
 
+function disjoint(fromA, toA, fromB, toB) {
+  return (toA < fromB) || (toB < fromA);
+}
+
+function involveLines(patch, from, to) {
+  if (!from) from = 1;
+  if (!to) to = 1000000;
+
+  const lines = patch.split(/\n/);
+  var changes = [];
+  var oldChanges = null;
+  var newChanges = null;
+  var oldPos = 0;
+  var newPos = 0;
+  var skipped = true;
+
+  for (let line of lines) {
+    if (line[0] == "@") {
+      const parsed = line.split("@@ ")[1].split(/,| |\+|\-/);
+      oldPos = parseInt(parsed[1]);
+      newPos = parseInt(parsed[4]);
+      const oldRange = parseInt(parsed[2]);
+      const newRange = parseInt(parsed[5]);
+      if (!skipped) changes.push({ oldChanges, newChanges });
+
+      skipped = disjoint(from, to, oldPos, oldPos + oldRange - 1) &&
+        disjoint(from, to, newPos, newPos + newRange - 1);
+      oldChanges = {};
+      newChanges = {};
+    } else {
+      if (line[0] == "-" || line[0] == " ") {
+        if (!skipped) oldChanges[oldPos] = line.slice(1);
+        ++oldPos;
+      }
+      if (line[0] == "+" || line[0] == " ") {
+        if (!skipped) newChanges[newPos] = line.slice(1);
+        ++newPos;
+      }
+    }
+  }
+  if (!skipped) changes.push({ oldChanges, newChanges });
+  if (changes.length > 0) {
+    return changes;
+  } else {
+    return null;
+  }
+}
+
+function transformCommit(commitObj) {
+  const { commit, author, sha } = commitObj;
+  const { message: commit_message, url: commit_url } = commit;
+  const { login: author_name, avatar_url: author_avatar_url } = author;
+  const commit_date = commit.author.date;
+  return {
+    sha,
+    commit_message,
+    commit_url,
+    author_name,
+    author_avatar_url,
+    commit_date,
+  };
+}
+
 function fetchCommitsMultiple(owner, repo, author, start, end, path, page) {
   const promiseList = Array(ALL_COMMITS_QUERY_RATE).fill().map((_, step) => {
     return fetchCommitsSingle(owner, repo, author, start, end, path, page + step);
@@ -113,20 +178,7 @@ function fetchCommitsMultiple(owner, repo, author, start, end, path, page) {
 function fetchCommitsSingle(owner, repo, author, start, end, path, page) {
   return fetchCommits(owner, repo, author, start, end, path, page)
     .then((response) => {
-      return response.map((commitObj) => {
-        const { commit, author, sha } = commitObj;
-        const { message: commit_message, url: commit_url } = commit;
-        const { login: author_name, avatar_url: author_avatar_url } = author;
-        const commit_date = commit.author.date;
-        return {
-          sha,
-          commit_message,
-          commit_url,
-          author_name,
-          author_avatar_url,
-          commit_date,
-        };
-      });
+      return response.map((commitObj) => transformCommit(commitObj));
     });
 }
 
