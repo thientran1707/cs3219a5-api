@@ -28,7 +28,7 @@ function sendNotifications() {
 
     for (var i = 0; i < subscriptions.length; i++) {
       var email = subscriptions[i].email;
-      var last_used = subscriptions[i].email;
+      var last_used = subscriptions[i].last_used;
 
       retrieveSubscriptionMessage(email)
       .then(function(result) {
