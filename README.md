@@ -29,3 +29,18 @@ results: [
     commit_date: "2015-11-26T17:11:28Z"
   }
 ]
+
+### Get all subscription
++ http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/subscription/all
+
+### Create a subscription
++ Parameters: email, repo (email subscripts repo);
++ http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/subscription/create?email=thientran1707@gmail.com&repo=https://github.com/thientran1707/cs3219test
+
+### Add repo to subscription for user
++ Parameters: email, repo (email subscripts repo);
++ http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/subscription/add?email=thientran1707@gmail.com&repo=https://github.com/thientran1707/cs3219test
+
+### Get notification for user
++ Paramers: email.
++ http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/notification?email=thientran1707@gmail.com

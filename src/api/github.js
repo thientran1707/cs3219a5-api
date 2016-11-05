@@ -140,8 +140,8 @@ function createHtmlMessage(commitObjs, last_visit) {
     }
   }
 
-  htmlString += "<h2>Your last visit to GitGuard: " + last_visit + "</h2>";
-  htmlString += "<h2>You subscribed to follow " + commitObjs.length + " Github repos, " + count + " of them have new commits from your last visit.</h2>";
+  htmlString += "<h3>Your last visit to GitGuard: " + last_visit + "</h3>";
+  htmlString += "<h3>You subscribed to follow " + commitObjs.length + " Github repos, " + count + " of them have new commits from your last visit.</h3>";
   
   for (let commitObj of commitObjs) {
     const { commits, repo } = commitObj;
@@ -149,7 +149,7 @@ function createHtmlMessage(commitObjs, last_visit) {
       continue;
     }
 
-    htmlString += "<h2>New commits of repo " + repo + ":</h2>";
+    htmlString += "<h3>New commits of repo " + repo + ":</h3>";
     htmlString += "<ul>";
 
     for (let commit of commits) {
@@ -160,6 +160,8 @@ function createHtmlMessage(commitObjs, last_visit) {
     htmlString += "</ul>";
   }
 
+  htmlString += "<h3>GitGuard Team</h3>";
+  
   return htmlString;
 }
 
