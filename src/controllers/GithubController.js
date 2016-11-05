@@ -31,7 +31,7 @@ class GithubController {
   }
 
   retrieveFileChangeHistory(req, res) {
-    const { owner, repo, start, end, path } = req.query;
+    const { owner, repo, from, to, path } = req.query;
 
     if (!owner || !repo) {
       res.status(400).json({
@@ -41,7 +41,7 @@ class GithubController {
       return;
     }
 
-    reply(res, fetchFileChangeHistory(owner, repo, start, end, path));
+    reply(res, fetchFileChangeHistory(owner, repo, from, to, path));
   }
 
   retrieveActiveLines(req, res) {
