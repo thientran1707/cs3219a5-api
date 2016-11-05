@@ -1,6 +1,6 @@
 'use strict';
 
-import { fetchTeamContribution, fetchMemberCommitHistory, fetchFileChangeHistory } from '../api/github';
+import { fetchTeamContribution, fetchMemberCommitHistory, fetchFileChangeHistory, cloneGitRepo } from '../api/github';
 
 class GithubController {
   retrieveContributor(req, res) {
@@ -42,6 +42,23 @@ class GithubController {
     }
 
     reply(res, fetchFileChangeHistory(owner, repo, start, end, path));
+  }
+
+  retrieveActiveLines(req, res) {
+    const { owner, repo } = req.query;
+
+    cloneGitRepo(owner, repo).then(() => {
+      res.status(200).json({
+        message: 'Success'
+      });
+    })
+    .catch((err) => {
+      console.log('Error: ');
+      console.log(err);
+      res.status(500).json({
+        error: err.message
+      });
+    });
   }
 }
 

@@ -23,7 +23,7 @@ configDB().then(() => {
       console.log(`Error: ${JSON.stringify(err)}`);
     }
 
-    console.info(`==> 🌎 Listening on port ${port}. API server runnign at http://localhost:${port}`);
+    console.info(`==> 🌎 Listening on port ${port}. API server running at http://localhost:${port}`);
   });
 })
 .catch((err) => {
