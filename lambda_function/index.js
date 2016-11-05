@@ -2,22 +2,15 @@
 
 var nodemailer = require('nodemailer');
 var request = require('request-promise');
-var API_URL = 'http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/';
+var API_URL = 'http://ec2-54-179-159-147.ap-southeast-1.compute.amazonaws.com:3000/api/'; // API server for GitGuard
 
 // create transporter using default SMTP transport
 var transporter = nodemailer.createTransport('smtps://cs3219.team7%40gmail.com:01279289861@smtp.gmail.com');
-
 var SENDER = 'cs3217.team7@gmail.com';
 
 exports.handler = (event, context) => {
-
-  sendEmail(event, function(err, data) {
-    console.log('Error: ', JSON.stringify(err));
-    context.done(err, { message: data }); 
-  });
+  sendNotifications();
 };
-
-sendNotifications();
 
 function sendNotifications() {
   var subscription_url = API_URL + 'subscription/';
@@ -32,8 +25,6 @@ function sendNotifications() {
 
       retrieveSubscriptionMessage(email)
       .then(function(result) {
-        console.log('result: ', result);
-
         var event = {};
         event.email = email;
         event.subject = 'Notification about update since your last visit on ' + last_used;
