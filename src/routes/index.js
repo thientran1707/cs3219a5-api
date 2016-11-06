@@ -11,7 +11,6 @@ export default () => {
 
   router.get('/contributors', Github.retrieveContributor);
   router.get('/member/commits', Github.retrieveMemberCommitHistory);
-  router.get('/member/codes', Github.retrieveActiveLines);
   router.get('/file', Github.retrieveFileChangeHistory);
 
   router.get('/subscription/all', Subscription.getAllSubscriptions);

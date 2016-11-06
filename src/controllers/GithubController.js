@@ -1,10 +1,16 @@
 'use strict';
 
-import { fetchTeamContribution, fetchMemberCommitHistory, fetchFileChangeHistory, cloneGitRepo } from '../api/github';
+import { fetchTeamContribution, fetchMemberCommitHistory, fetchFileChangeHistory } from '../api/github';
+import SubscriptionController from './SubscriptionController';
+const Subscription = new SubscriptionController();
 
 class GithubController {
   retrieveContributor(req, res) {
-    const { owner, repo } = req.query;
+    const { owner, repo, email } = req.query;
+    if (email) {
+      Subscription.updateVisitTime(email); 
+    }
+
     if (!owner || !repo) {
       res.status(400).json({
         error: 'Owner and repo required'
@@ -17,7 +23,10 @@ class GithubController {
   }
 
   retrieveMemberCommitHistory(req, res) {
-    const { owner, repo, author, start, end, page } = req.query;
+    const { owner, repo, author, start, end, page, email, path } = req.query;
+    if (email) {
+      Subscription.updateVisitTime(email); 
+    }
 
     if (!owner || !repo || !author) {
       res.status(400).json({
@@ -27,11 +36,15 @@ class GithubController {
       return;
     }
 
-    reply(res, fetchMemberCommitHistory(owner, repo, author, start, end, page));
+    reply(res, fetchMemberCommitHistory(owner, repo, author, start, end, path, page));
   }
 
   retrieveFileChangeHistory(req, res) {
-    const { owner, repo, from, to, path } = req.query;
+    const { owner, repo, from, to, path, email } = req.query;
+
+    if (email) {
+      Subscription.updateVisitTime(email); 
+    }
 
     if (!owner || !repo) {
       res.status(400).json({
@@ -42,23 +55,6 @@ class GithubController {
     }
 
     reply(res, fetchFileChangeHistory(owner, repo, from, to, path));
-  }
-
-  retrieveActiveLines(req, res) {
-    const { owner, repo } = req.query;
-
-    cloneGitRepo(owner, repo).then(() => {
-      res.status(200).json({
-        message: 'Success'
-      });
-    })
-    .catch((err) => {
-      console.log('Error: ');
-      console.log(err);
-      res.status(500).json({
-        error: err.message
-      });
-    });
   }
 }
 

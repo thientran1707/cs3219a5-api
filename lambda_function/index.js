@@ -25,13 +25,13 @@ function sendNotifications() {
 
       retrieveSubscriptionMessage(email)
       .then(function(result) {
-        var event = {};
-        event.email = email;
-        event.subject = 'Notification about update since your last visit on ' + last_used;
-        event.message = result.html;
-        event.html = result.html;
+        var content = {};
+        content.email = result.email;
+        content.subject = 'Notification about update since your last visit on ' + result.last_visit;
+        content.message = result.html;
+        content.html = result.html;
 
-        sendEmail(event, function(err, data) {
+        sendEmail(content, function(err, data) {
           console.log('Error: ', JSON.stringify(err));
           context.done(err, { message: data }); 
         });
@@ -63,11 +63,11 @@ function fetch(url, qs) {
   return request(options);
 }
 
-function sendEmail(event, done) {
-  var receiver = event.email;
-  var subject = event.subject;
-  var message = event.message;
-  var html = event.html;
+function sendEmail(content, done) {
+  var receiver = content.email;
+  var subject = content.subject;
+  var message = content.message;
+  var html = content.html;
 
   var mailOptions = {
     from: SENDER,
@@ -79,10 +79,12 @@ function sendEmail(event, done) {
 
   transporter.sendMail(mailOptions, function(err, info) {
     if (err) {
+      console.log('Error: ', err);
       return err;
     }
 
-    console.log('Message sent: ', info.response);
+    console.log('Message sent to ' + receiver);
+    console.log('Info: ' + info.response);
     return info.response;
   });
 }

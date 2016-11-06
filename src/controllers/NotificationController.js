@@ -9,20 +9,9 @@ aws.config.secretAccessKey = config.awsAccessSecret;
 aws.config.region = config.awsRegion;
 
 const lambda = new aws.Lambda();
-let value = {
-    "email": "a0112044@u.nus.edu",
-    "name": "Tran Cong Thien",
-    "message": "Test from POSTMAN",
-    "subject": "Test",
-    "html": "<h1>Test</h1>"
-};
-
-let stringValue = JSON.stringify(value);
-console.log('String value: ', stringValue);
-
 const params = {
   FunctionName: 'gitguar_email_sender',
-  Payload: stringValue
+  Payload: null
 };
 
 class NotificationController {

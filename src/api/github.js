@@ -23,11 +23,11 @@ export function fetchTeamContribution(owner, repo) {
     });
 }
 
-export function fetchMemberCommitHistory(owner, repo, author, start, end, page) {
+export function fetchMemberCommitHistory(owner, repo, author, start, end, path, page) {
   if (page) {
-    return fetchCommitsSingle(owner, repo, author, start, end, null, page);
+    return fetchCommitsSingle(owner, repo, author, start, end, path, page);
   } else {
-    return fetchCommitsMultiple(owner, repo, author, start, end, null, 1);
+    return fetchCommitsMultiple(owner, repo, author, start, end, path, 1);
   }
 }
 
@@ -37,7 +37,12 @@ export function fetchFileChangeHistory(owner, repo, from, to, path) {
       return Promise.all(response.map((entry) => {
         return fetchCommitBySha(owner, repo, entry.sha)
           .then((commit) => {
-            const patch = commit.files.find((file) => file.filename == path).patch;
+            const filteredFile = commit.files.find((file) => file.filename == path);
+            if (!filteredFile) {
+              return [];
+            }
+
+            const patch = filteredFile.patch;
             const changes = involveLines(patch, from, to);
             if (changes) {
               return [Object.assign(entry, { changes: changes })];
